@@ -76,13 +76,28 @@ VS Code configuration is checked into the repository in `.vscode`.
 * Java 16 runtime (which would stop being maintained when Java 16 reaches EOL, but Java 11 would continue being maintained until its EOL).
 * Java 8 (to backport new user action contract with `java.util.Map` types instead of Gson)
 
-## Concerning actionloop
+## Concerning ActionLoop proxy
 
 See https://github.com/apache/openwhisk/blob/master/docs/actions-actionloop.md for background info.
 
-The ActionLoop proxy was not used to implement this runtime because as Apache contributors have noticed in the past, the ActionLoop proxy doesn't always provide a performance benefit (https://openwhisk-team.slack.com/archives/C3TPCAQG1/p1607833804403300?thread_ts=1607829152.403100&cid=C3TPCAQG1).
+Using ActionLoop proxy would have made it too difficult for me to create this custom runtime because I lack experience with Gradle (needed to understand the complex build system) and Python (needed for the `compile` script you're expected to create). Therefore, to reduce the barrier to entry to create the custom runtime, I used the original runtime that just used an HTTP server as reference, since I'm already familiar with HTTP server apps and I could get by without needing to use Gradle.
 
-So far, it seems that the ActionLoop proxy only improved performance for runtimes where it replace poorly-implemented init functionality that wrote user action code to disk instead of keeping it in memory. For example, Ruby.
+Furthermore, it isn't clear that the ActionLoop proxy protocol itseld adds performance when it's used for runtimes. For the Node.js runtime, it was found not to improve performance (https://github.com/apache/openwhisk-runtime-java/pull/82#issuecomment-851799588). This may be due to the fact that the Node.js runtime stores the user action code in memory instead of writing it to disk:
+
+**Node.js runtime init:**
+
+https://github.com/apache/openwhisk-runtime-nodejs/blob/master/core/nodejsActionBase/runner.js
+
+```javascript
+class NodeActionRunner {
+
+    constructor(handler) {
+        this.userScriptMain = handler;
+    }
+// more code
+```
+
+The Ruby runtime was found to be improved by using ActionLoop proxy. There, the new Go code appears to store the user action code more efficiently than the original Ruby approach, which wrote the user action code to disk:
 
 **Ruby runtime init before ActionLoop:**
 
@@ -102,22 +117,7 @@ buf, err = base64.StdEncoding.DecodeString(request.Value.Code)
 _, err = ap.ExtractAndCompile(&buf, main)
 ```
 
-The ActionLoop proxy was found to not improve the performance of the Node.js runtime (see Slack history linked above), and it's likely because the Node.js runtime already efficiently performs the init phase:
-
-**Node.js runtime init:**
-
-https://github.com/apache/openwhisk-runtime-nodejs/blob/master/core/nodejsActionBase/runner.js
-
-```javascript
-class NodeActionRunner {
-
-    constructor(handler) {
-        this.userScriptMain = handler;
-    }
-// more code
-```
-
-Because the ActionLoop proxy adds complexity to the Apache OpenWhisk developer's experience (needing to know the multi project Gradle build, needing to understand how each Docker layer interacts, needing to know Python for the "compile" script in each ActionLoop-based runtime, etc), yet the added complexity adds no value, it isn't used here.
+If this runtime is maintained longtime outside of the Apache Software Foundation, as a 3rd party runtime instead of an official runtime, the ActionLoop proxy approach will be investigated further before it is used.
 
 ## Disclaimers
 
