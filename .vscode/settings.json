@@ -1,0 +1,12 @@
+{
+    "java.project.referencedLibraries": {
+        "include": [
+            "lib/gson-2.8.7*.jar"
+        ]
+    },
+    "cSpell.words": [
+        "Entrypoint",
+        "rawtypes",
+        "useraction"
+    ]
+}
