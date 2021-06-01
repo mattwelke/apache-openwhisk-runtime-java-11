@@ -82,7 +82,7 @@ See https://github.com/apache/openwhisk/blob/master/docs/actions-actionloop.md f
 
 Using ActionLoop proxy would have made it too difficult for me to create this custom runtime because I lack experience with Gradle (needed to understand the complex build system) and Python (needed for the `compile` script you're expected to create). Therefore, to reduce the barrier to entry to create the custom runtime, I used the original runtime that just used an HTTP server as reference, since I'm already familiar with HTTP server apps and I could get by without needing to use Gradle.
 
-Furthermore, it isn't clear that the ActionLoop proxy protocol itseld adds performance when it's used for runtimes. For the Node.js runtime, it was found not to improve performance (https://github.com/apache/openwhisk-runtime-java/pull/82#issuecomment-851799588). This may be due to the fact that the Node.js runtime stores the user action code in memory instead of writing it to disk:
+Furthermore, it isn't clear that the ActionLoop proxy protocol itself improves performance over using an HTTP server in the runtime's native language. For the Node.js runtime, it was found to not improve performance (https://openwhisk-team.slack.com/archives/C3TPCAQG1/p1607833804403300?thread_ts=1607829152.403100&cid=C3TPCAQG1). This may be due to the fact that the Node.js runtime stores the user action code in memory instead of writing it to disk:
 
 **Node.js runtime init:**
 
